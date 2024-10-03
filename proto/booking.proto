@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package booking;
+option go_package = "github.com/Ddarli/gym/booking-service/models";
+
+import "google/protobuf/timestamp.proto";
+
+service BookingService {
+  rpc CreateBooking (CreateBookingRequest) returns (Booking);
+  rpc GetBooking (GetBookingRequest) returns (Booking);
+  rpc CancelBooking (CancelBookingRequest) returns (CancelBookingResponse);
+}
+
+message Booking {
+  string id = 1;
+  string user_id = 2;
+  string scheduled_class_id = 3;
+  google.protobuf.Timestamp booking_time = 4;
+  BookingStatus status = 5;
+}
+
+enum BookingStatus {
+  PENDING = 0;
+  CONFIRMED = 1;
+  CANCELLED = 2;
+}
+
+message CreateBookingRequest {
+  string user_id = 1;
+  string scheduled_class_id = 2;
+}
+
+message GetBookingRequest {
+  string id = 1;
+}
+
+message CancelBookingRequest {
+  string id = 1;
+}
+
+message CancelBookingResponse {
+  bool success = 1;
+}
