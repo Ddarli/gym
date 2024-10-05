@@ -6,16 +6,16 @@ option go_package = "github.com/Ddarli/gym/user-service/models";
 
 service UserService{
   rpc CreateUser(CreateUserRequest) returns(User);
-  rpc GetUser (GetUserRequest) returns (User);
   rpc UpdateUser (UpdateUserRequest) returns (User);
-  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse);
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
 }
 
 message User {
   string id = 1;
   string username = 2;
-  string password = 3;
-  string email = 4;
+  string email = 3;
+  string password = 4;
   string phone_number = 5;
 }
 
@@ -26,19 +26,24 @@ message CreateUserRequest {
   string phone_number = 4;
 }
 
-message   GetUserRequest {
-  string id = 1;
-}
-
 message UpdateUserRequest {
   string id = 1;
   User user = 2;
 }
 
-message DeleteUserRequest {
-  string id = 1;
+message AuthenticateRequest {
+  string username = 1;
+  string password = 2;
 }
 
-message DeleteUserResponse {
-  bool success = 1;
+message AuthenticateResponse {
+  string token = 1;
+  string error = 2;
+}
+
+message VerifyTokenRequest{
+  string token = 1;
+}
+message VerifyTokenResponse{
+  bool result = 1;
 }

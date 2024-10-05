@@ -6,10 +6,8 @@ option go_package = "github.com/Ddarli/gym/schedule-service/models";
 import "google/protobuf/timestamp.proto";
 
 service ClassService {
-  rpc CreateClass (CreateClassRequest) returns (Class);
-  rpc GetClass (GetClassRequest) returns (Class);
-  rpc ListClasses (ListClassesRequest) returns (ListClassesResponse);
-  rpc ScheduleClass (ScheduleClassRequest) returns (ScheduledClass);
+  rpc GetClass(GetClassRequest) returns (GetClassResponse);
+  rpc CreateClass(CreateClassRequest) returns (CreateClassResponse);
 }
 
 message Class {
@@ -19,37 +17,20 @@ message Class {
   int32 capacity = 4;
 }
 
+message GetClassRequest {
+  string id = 1;
+}
+
+message GetClassResponse {
+  Class class = 1;
+}
+
 message CreateClassRequest {
   string name = 1;
   string description = 2;
   int32 capacity = 3;
 }
 
-message GetClassRequest {
-  string id = 1;
-}
-
-message ListClassesRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-}
-
-message ListClassesResponse {
-  repeated Class classes = 1;
-  int32 total = 2;
-}
-
-message ScheduledClass {
-  string id = 1;
-  string class_id = 2;
-  string trainer_id = 3;
-  google.protobuf.Timestamp start_time = 4;
-  google.protobuf.Timestamp end_time = 5;
-}
-
-message ScheduleClassRequest {
-  string class_id = 1;
-  string trainer_id = 2;
-  google.protobuf.Timestamp start_time = 3;
-  google.protobuf.Timestamp end_time = 4;
+message CreateClassResponse {
+  Class class = 1;
 }

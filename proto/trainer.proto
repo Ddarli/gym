@@ -4,9 +4,8 @@ package trainer;
 option go_package = "github.com/Ddarli/gym/trainer-service/models";
 
 service TrainerService {
-  rpc CreateTrainer (CreateTrainerRequest) returns (Trainer);
-  rpc GetTrainer (GetTrainerRequest) returns (Trainer);
-  rpc ListTrainers (ListTrainersRequest) returns (ListTrainersResponse);
+  rpc GetTrainer(GetTrainerRequest) returns (GetTrainerResponse);
+  rpc CreateTrainer(CreateTrainerRequest) returns (CreateTrainerResponse);
 }
 
 message Trainer {
@@ -15,21 +14,19 @@ message Trainer {
   string specialization = 3;
 }
 
+message GetTrainerRequest {
+  string id = 1;
+}
+
+message GetTrainerResponse {
+  Trainer trainer = 1;
+}
+
 message CreateTrainerRequest {
   string name = 1;
   string specialization = 2;
 }
 
-message GetTrainerRequest {
-  string id = 1;
-}
-
-message ListTrainersRequest {
-  int32 page = 1;
-  int32 page_size = 2;
-}
-
-message ListTrainersResponse {
-  repeated Trainer trainers = 1;
-  int32 total = 2;
+message CreateTrainerResponse {
+  Trainer trainer = 1;
 }

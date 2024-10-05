@@ -8,4 +8,5 @@ use (
 	./schedule-service
 	./trainer-service
 	./user-service
+	./class-service
 )

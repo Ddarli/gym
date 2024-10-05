@@ -15,6 +15,8 @@ import (
 
 func newService() models.BookingServiceServer {
 	conf := common.LoadConfig()
+	//logger, _ := zap.NewDevelopment()
+	//defer logger.Sync()
 	db, err := db.NewPostgresConnection(conf)
 	if err != nil {
 		log.Fatal(err)

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package schedule;
+
+option go_package = "github.com/Ddarli/gym/schedule-service/models";
+
+service ScheduleService {
+  rpc GetSchedule(GetScheduleRequest) returns (GetScheduleResponse);
+  rpc CreateSchedule(CreateScheduleRequest) returns (CreateScheduleResponse);
+}
+
+message Schedule {
+  string id = 1;
+  string class_id = 2;
+  string trainer_id = 3;
+  string start_time = 4;
+  string end_time = 5;
+}
+
+message GetScheduleRequest {
+  string id = 1;
+}
+
+message GetScheduleResponse {
+  Schedule schedule = 1;
+}
+
+message CreateScheduleRequest {
+  string class_id = 1;
+  string trainer_id = 2;
+  string start_time = 3;
+  string end_time = 4;
+}
+
+message CreateScheduleResponse {
+  Schedule schedule = 1;
+}

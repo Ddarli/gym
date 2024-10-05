@@ -19,18 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TrainerService_CreateTrainer_FullMethodName = "/trainer.TrainerService/CreateTrainer"
 	TrainerService_GetTrainer_FullMethodName    = "/trainer.TrainerService/GetTrainer"
-	TrainerService_ListTrainers_FullMethodName  = "/trainer.TrainerService/ListTrainers"
+	TrainerService_CreateTrainer_FullMethodName = "/trainer.TrainerService/CreateTrainer"
 )
 
 // TrainerServiceClient is the client API for TrainerService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TrainerServiceClient interface {
-	CreateTrainer(ctx context.Context, in *CreateTrainerRequest, opts ...grpc.CallOption) (*Trainer, error)
-	GetTrainer(ctx context.Context, in *GetTrainerRequest, opts ...grpc.CallOption) (*Trainer, error)
-	ListTrainers(ctx context.Context, in *ListTrainersRequest, opts ...grpc.CallOption) (*ListTrainersResponse, error)
+	GetTrainer(ctx context.Context, in *GetTrainerRequest, opts ...grpc.CallOption) (*GetTrainerResponse, error)
+	CreateTrainer(ctx context.Context, in *CreateTrainerRequest, opts ...grpc.CallOption) (*CreateTrainerResponse, error)
 }
 
 type trainerServiceClient struct {
@@ -41,19 +39,9 @@ func NewTrainerServiceClient(cc grpc.ClientConnInterface) TrainerServiceClient {
 	return &trainerServiceClient{cc}
 }
 
-func (c *trainerServiceClient) CreateTrainer(ctx context.Context, in *CreateTrainerRequest, opts ...grpc.CallOption) (*Trainer, error) {
+func (c *trainerServiceClient) GetTrainer(ctx context.Context, in *GetTrainerRequest, opts ...grpc.CallOption) (*GetTrainerResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Trainer)
-	err := c.cc.Invoke(ctx, TrainerService_CreateTrainer_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *trainerServiceClient) GetTrainer(ctx context.Context, in *GetTrainerRequest, opts ...grpc.CallOption) (*Trainer, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Trainer)
+	out := new(GetTrainerResponse)
 	err := c.cc.Invoke(ctx, TrainerService_GetTrainer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -61,10 +49,10 @@ func (c *trainerServiceClient) GetTrainer(ctx context.Context, in *GetTrainerReq
 	return out, nil
 }
 
-func (c *trainerServiceClient) ListTrainers(ctx context.Context, in *ListTrainersRequest, opts ...grpc.CallOption) (*ListTrainersResponse, error) {
+func (c *trainerServiceClient) CreateTrainer(ctx context.Context, in *CreateTrainerRequest, opts ...grpc.CallOption) (*CreateTrainerResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListTrainersResponse)
-	err := c.cc.Invoke(ctx, TrainerService_ListTrainers_FullMethodName, in, out, cOpts...)
+	out := new(CreateTrainerResponse)
+	err := c.cc.Invoke(ctx, TrainerService_CreateTrainer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +63,8 @@ func (c *trainerServiceClient) ListTrainers(ctx context.Context, in *ListTrainer
 // All implementations must embed UnimplementedTrainerServiceServer
 // for forward compatibility.
 type TrainerServiceServer interface {
-	CreateTrainer(context.Context, *CreateTrainerRequest) (*Trainer, error)
-	GetTrainer(context.Context, *GetTrainerRequest) (*Trainer, error)
-	ListTrainers(context.Context, *ListTrainersRequest) (*ListTrainersResponse, error)
+	GetTrainer(context.Context, *GetTrainerRequest) (*GetTrainerResponse, error)
+	CreateTrainer(context.Context, *CreateTrainerRequest) (*CreateTrainerResponse, error)
 	mustEmbedUnimplementedTrainerServiceServer()
 }
 
@@ -88,14 +75,11 @@ type TrainerServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTrainerServiceServer struct{}
 
-func (UnimplementedTrainerServiceServer) CreateTrainer(context.Context, *CreateTrainerRequest) (*Trainer, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTrainer not implemented")
-}
-func (UnimplementedTrainerServiceServer) GetTrainer(context.Context, *GetTrainerRequest) (*Trainer, error) {
+func (UnimplementedTrainerServiceServer) GetTrainer(context.Context, *GetTrainerRequest) (*GetTrainerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrainer not implemented")
 }
-func (UnimplementedTrainerServiceServer) ListTrainers(context.Context, *ListTrainersRequest) (*ListTrainersResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListTrainers not implemented")
+func (UnimplementedTrainerServiceServer) CreateTrainer(context.Context, *CreateTrainerRequest) (*CreateTrainerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTrainer not implemented")
 }
 func (UnimplementedTrainerServiceServer) mustEmbedUnimplementedTrainerServiceServer() {}
 func (UnimplementedTrainerServiceServer) testEmbeddedByValue()                        {}
@@ -118,24 +102,6 @@ func RegisterTrainerServiceServer(s grpc.ServiceRegistrar, srv TrainerServiceSer
 	s.RegisterService(&TrainerService_ServiceDesc, srv)
 }
 
-func _TrainerService_CreateTrainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTrainerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TrainerServiceServer).CreateTrainer(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: TrainerService_CreateTrainer_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TrainerServiceServer).CreateTrainer(ctx, req.(*CreateTrainerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TrainerService_GetTrainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTrainerRequest)
 	if err := dec(in); err != nil {
@@ -154,20 +120,20 @@ func _TrainerService_GetTrainer_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TrainerService_ListTrainers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListTrainersRequest)
+func _TrainerService_CreateTrainer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTrainerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TrainerServiceServer).ListTrainers(ctx, in)
+		return srv.(TrainerServiceServer).CreateTrainer(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: TrainerService_ListTrainers_FullMethodName,
+		FullMethod: TrainerService_CreateTrainer_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TrainerServiceServer).ListTrainers(ctx, req.(*ListTrainersRequest))
+		return srv.(TrainerServiceServer).CreateTrainer(ctx, req.(*CreateTrainerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -180,16 +146,12 @@ var TrainerService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TrainerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateTrainer",
-			Handler:    _TrainerService_CreateTrainer_Handler,
-		},
-		{
 			MethodName: "GetTrainer",
 			Handler:    _TrainerService_GetTrainer_Handler,
 		},
 		{
-			MethodName: "ListTrainers",
-			Handler:    _TrainerService_ListTrainers_Handler,
+			MethodName: "CreateTrainer",
+			Handler:    _TrainerService_CreateTrainer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
