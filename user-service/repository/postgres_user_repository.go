@@ -18,9 +18,9 @@ func NewPostgresUserRepository(db *sqlx.DB) UserRepository {
 	return &postgresUserRepository{db: db}
 }
 
-func fromProto(u *models.User) *models.DBUser {
+func fromProto(u *models.User) *models.UserModel {
 	id, _ := strconv.Atoi(u.Id)
-	return &models.DBUser{
+	return &models.UserModel{
 		Id:          id,
 		Username:    u.Username,
 		Password:    u.Password,
@@ -29,7 +29,7 @@ func fromProto(u *models.User) *models.DBUser {
 	}
 }
 
-func toProto(u *models.DBUser) *models.User {
+func toProto(u *models.UserModel) *models.User {
 	return &models.User{
 		Id:          strconv.Itoa(u.Id),
 		Username:    u.Username,
@@ -51,7 +51,7 @@ func (r *postgresUserRepository) Create(user *models.User) error {
 	return nil
 }
 func (r *postgresUserRepository) Get(userId string) (*models.User, error) {
-	var user models.DBUser
+	var user models.UserModel
 	id, err := strconv.Atoi(userId)
 	if err != nil {
 		return nil, err

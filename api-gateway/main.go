@@ -1,6 +1,7 @@
 package main
 
 import (
+	bookingmodel "github.com/Ddarli/gym/bookingservice/models"
 	"github.com/Ddarli/gym/gateway/config"
 	"github.com/Ddarli/gym/gateway/handlers"
 	"github.com/Ddarli/gym/userservice/models"
@@ -17,9 +18,15 @@ func main() {
 		log.Fatalf("Did not connect: %v", err)
 	}
 	defer userServiceConnection.Close()
+	bookingServiceConnection, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Did not connect: %v", err)
+	}
+	defer bookingServiceConnection.Close()
 
 	userServiceClient := models.NewUserServiceClient(userServiceConnection)
-	handler := handlers.NewHandler(userServiceClient)
+	bookingServiceClient := bookingmodel.NewBookingServiceClient(bookingServiceConnection)
+	handler := handlers.NewHandler(userServiceClient, bookingServiceClient)
 
 	r := chi.NewRouter()
 	handler.RegisterRoutes(r)
