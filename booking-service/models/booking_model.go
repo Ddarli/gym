@@ -13,16 +13,12 @@ type BookingModel struct {
 	Status           int       `json:"status" db:"status"`
 }
 
-func ToBookingModel(model *Booking) BookingModel {
-	formattedBookingTime := model.BookingTime.AsTime()
-	id, _ := strconv.Atoi(model.Id)
-	userId, _ := strconv.Atoi(model.UserId)
-	scheduledClassId, _ := strconv.Atoi(model.ScheduledClassId)
-	return BookingModel{
-		Id:               id,
-		UserId:           userId,
-		ScheduledClassId: scheduledClassId,
-		BookingTime:      formattedBookingTime,
-		Status:           0,
+func ToProto(bookingModel *BookingModel) *Booking {
+	return &Booking{
+		Id:               strconv.Itoa(bookingModel.Id),
+		UserId:           strconv.Itoa(bookingModel.UserId),
+		ScheduledClassId: strconv.Itoa(bookingModel.ScheduledClassId),
+		BookingTime:      time.Time.Format(bookingModel.BookingTime, "2006-01-02 15:04:05"),
+		Status:           strconv.Itoa(bookingModel.Status),
 	}
 }

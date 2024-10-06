@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Ddarli/gym/userservice/config"
+	"github.com/Ddarli/gym/common"
 	"github.com/Ddarli/gym/userservice/db"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/Ddarli/gym/userservice/repository"
@@ -14,7 +14,7 @@ import (
 )
 
 func newService() models.UserServiceServer {
-	conf := config.LoadConfig()
+	conf := common.LoadConfig()
 	db, err := db.NewPostgresConnection(conf)
 	if err != nil {
 		log.Fatal(err)

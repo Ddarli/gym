@@ -3,7 +3,8 @@ package repository
 import "github.com/Ddarli/gym/bookingservice/models"
 
 type BookingRepository interface {
-	Create(booking *models.Booking) error
-	Get(id string) (*models.Booking, error)
-	Delete(id string) error
+	Create(*models.BookingModel) error
+	Get(int) (*models.BookingModel, error)
+	Update(int, *models.BookingModel) error
+	Delete(int) error
 }

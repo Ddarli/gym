@@ -8,20 +8,7 @@ import (
 	mylogger "github.com/Ddarli/gym/common/logger"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"strconv"
 )
-
-func toProto(model models.BookingModel) *models.Booking {
-	bookingTimeProto := timestamppb.New(model.BookingTime)
-	return &models.Booking{
-		Id:               strconv.Itoa(model.Id),
-		UserId:           strconv.Itoa(model.UserId),
-		ScheduledClassId: strconv.Itoa(model.ScheduledClassId),
-		BookingTime:      bookingTimeProto,
-		Status:           0,
-	}
-}
 
 type postgresBookingRepository struct {
 	db     *sqlx.DB
@@ -35,25 +22,20 @@ func NewPostgresBookingRepository(db *sqlx.DB) BookingRepository {
 	}
 }
 
-func (r *postgresBookingRepository) Create(newBooking *models.Booking) error {
-	booking := models.ToBookingModel(newBooking)
+func (r *postgresBookingRepository) Create(newBooking *models.BookingModel) error {
 	tx := r.db.MustBegin()
 	tx.MustExec("INSERT INTO bookings (user_id, scheduled_class_id, booking_time, status) VALUES ($1, $2, $3, $4)",
-		booking.UserId, booking.ScheduledClassId, booking.BookingTime, booking.Status)
+		newBooking.UserId, newBooking.ScheduledClassId, newBooking.BookingTime, newBooking.Status)
 	if err := tx.Commit(); err != nil {
 		r.logger.Errorf("Failed to commit transaction to booking service: %v", err)
 		return err
 	}
-	r.logger.Infof("Created booking with id: %d", booking.Id)
+	r.logger.Infof("Created booking with id: %d", newBooking.Id)
 	return nil
 }
-func (r *postgresBookingRepository) Get(bookingId string) (*models.Booking, error) {
+func (r *postgresBookingRepository) Get(id int) (*models.BookingModel, error) {
 	var booking models.BookingModel
-	id, err := strconv.Atoi(bookingId)
-	if err != nil {
-		return nil, err
-	}
-	err = r.db.Get(&booking, "SELECT * FROM bookings WHERE id = $1", id)
+	err := r.db.Get(&booking, "SELECT * FROM bookings WHERE id = $1", id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			r.logger.Errorf("Failed to get booking with ID: %d, error: %v", id, err)
@@ -63,16 +45,19 @@ func (r *postgresBookingRepository) Get(bookingId string) (*models.Booking, erro
 		return nil, err
 	}
 	r.logger.Infof("Successfully retrieved booking with ID: %d", booking.Id)
-	return toProto(booking), nil
+	return &booking, nil
 }
-func (r *postgresBookingRepository) Delete(id string) error {
-	bookingId, err := strconv.Atoi(id)
+func (r *postgresBookingRepository) Delete(id int) error {
 	tx := r.db.MustBegin()
-	tx.MustExec("DELETE FROM bookings WHERE id = $1", bookingId)
-	if err = tx.Commit(); err != nil {
+	tx.MustExec("DELETE FROM bookings WHERE id = $1", id)
+	if err := tx.Commit(); err != nil {
 		r.logger.Errorf("Failed to commit transaction to booking service: %v", err)
 		return err
 	}
-	r.logger.Infof("Successfully deleted booking with ID: %d", bookingId)
+	r.logger.Infof("Successfully deleted booking with ID: %d", id)
+	return nil
+}
+
+func (r *postgresBookingRepository) Update(id int, updatedBooking *models.BookingModel) error {
 	return nil
 }

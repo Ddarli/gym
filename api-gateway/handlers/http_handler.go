@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	bookingmodel "github.com/Ddarli/gym/bookingservice/models"
+	classservice "github.com/Ddarli/gym/classservice/models"
 	handlers "github.com/Ddarli/gym/gateway/middleware"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/go-chi/chi/v5"
@@ -15,12 +16,15 @@ import (
 type handler struct {
 	userService    models.UserServiceClient
 	bookingService bookingmodel.BookingServiceClient
+	classService   classservice.ClassServiceClient
 }
 
-func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingmodel.BookingServiceClient) *handler {
+func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingmodel.BookingServiceClient,
+	classServiceClient classservice.ClassServiceClient) *handler {
 	return &handler{
 		userService:    userServiceClient,
 		bookingService: bookingService,
+		classService:   classServiceClient,
 	}
 }
 
@@ -36,8 +40,13 @@ func (h *handler) RegisterRoutes(r *chi.Mux) {
 	})
 	r.Group(func(r chi.Router) {
 		r.Use(handlers.TokenAuthMiddleware(h.userService))
+
 		r.Get("/api/v1/bookings/{bookingId}", h.GetBookingHandler())
 		r.Post("/api/v1/bookings", h.CreateBookingHandler())
+
+		r.Get("/api/v1/classes/{classId}", h.GetClassHandler())
+		r.Get("/api/v1/classes", h.GetClassesHandler())
+		r.Post("/api/v1/classes", h.CreateClassHandler())
 	})
 }
 
@@ -96,8 +105,7 @@ func (h *handler) GetBookingHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		//w.Header().Set("Content-Type", "application/json")
-		bookingModel := bookingmodel.ToBookingModel(booking)
-		if err := json.NewEncoder(w).Encode(bookingModel); err != nil {
+		if err := json.NewEncoder(w).Encode(booking); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
@@ -117,6 +125,59 @@ func (h *handler) CreateBookingHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		if err := json.NewEncoder(w).Encode(booking); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (h *handler) GetClassHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		classId := chi.URLParam(r, "classId")
+		class, err := h.classService.GetClass(ctx, &classservice.GetClassRequest{Id: classId})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err := json.NewEncoder(w).Encode(class); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (h *handler) CreateClassHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		class := &classservice.ClassModel{}
+		if err := json.NewDecoder(r.Body).Decode(class); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		request := classservice.CreateClassRequest{
+			Name:        class.Name,
+			Description: class.Description,
+			Capacity:    int32(class.Capacity),
+		}
+		response, err := h.classService.CreateClass(ctx, &request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		err = json.NewEncoder(w).Encode(&response)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (h *handler) GetClassesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		classes, err := h.classService.GetClasses(ctx, &classservice.GetClassesRequest{})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err := json.NewEncoder(w).Encode(classes); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}

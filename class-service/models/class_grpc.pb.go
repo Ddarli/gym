@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	ClassService_GetClass_FullMethodName    = "/class.ClassService/GetClass"
 	ClassService_CreateClass_FullMethodName = "/class.ClassService/CreateClass"
+	ClassService_GetClasses_FullMethodName  = "/class.ClassService/GetClasses"
 )
 
 // ClassServiceClient is the client API for ClassService service.
@@ -29,6 +30,7 @@ const (
 type ClassServiceClient interface {
 	GetClass(ctx context.Context, in *GetClassRequest, opts ...grpc.CallOption) (*GetClassResponse, error)
 	CreateClass(ctx context.Context, in *CreateClassRequest, opts ...grpc.CallOption) (*CreateClassResponse, error)
+	GetClasses(ctx context.Context, in *GetClassesRequest, opts ...grpc.CallOption) (*GetClassesResponse, error)
 }
 
 type classServiceClient struct {
@@ -59,12 +61,23 @@ func (c *classServiceClient) CreateClass(ctx context.Context, in *CreateClassReq
 	return out, nil
 }
 
+func (c *classServiceClient) GetClasses(ctx context.Context, in *GetClassesRequest, opts ...grpc.CallOption) (*GetClassesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetClassesResponse)
+	err := c.cc.Invoke(ctx, ClassService_GetClasses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ClassServiceServer is the server API for ClassService service.
 // All implementations must embed UnimplementedClassServiceServer
 // for forward compatibility.
 type ClassServiceServer interface {
 	GetClass(context.Context, *GetClassRequest) (*GetClassResponse, error)
 	CreateClass(context.Context, *CreateClassRequest) (*CreateClassResponse, error)
+	GetClasses(context.Context, *GetClassesRequest) (*GetClassesResponse, error)
 	mustEmbedUnimplementedClassServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedClassServiceServer) GetClass(context.Context, *GetClassReques
 }
 func (UnimplementedClassServiceServer) CreateClass(context.Context, *CreateClassRequest) (*CreateClassResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateClass not implemented")
+}
+func (UnimplementedClassServiceServer) GetClasses(context.Context, *GetClassesRequest) (*GetClassesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClasses not implemented")
 }
 func (UnimplementedClassServiceServer) mustEmbedUnimplementedClassServiceServer() {}
 func (UnimplementedClassServiceServer) testEmbeddedByValue()                      {}
@@ -138,6 +154,24 @@ func _ClassService_CreateClass_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClassService_GetClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClassesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClassServiceServer).GetClasses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ClassService_GetClasses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClassServiceServer).GetClasses(ctx, req.(*GetClassesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ClassService_ServiceDesc is the grpc.ServiceDesc for ClassService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var ClassService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateClass",
 			Handler:    _ClassService_CreateClass_Handler,
+		},
+		{
+			MethodName: "GetClasses",
+			Handler:    _ClassService_GetClasses_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

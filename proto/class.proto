@@ -1,14 +1,16 @@
 syntax = "proto3";
 
 package class;
-option go_package = "github.com/Ddarli/gym/schedule-service/models";
+option go_package = "github.com/Ddarli/gym/class-service/models";
 
-import "google/protobuf/timestamp.proto";
 
 service ClassService {
   rpc GetClass(GetClassRequest) returns (GetClassResponse);
   rpc CreateClass(CreateClassRequest) returns (CreateClassResponse);
+  rpc GetClasses(GetClassesRequest) returns (GetClassesResponse);
 }
+
+message GetClassesRequest{}
 
 message Class {
   string id = 1;
@@ -33,4 +35,8 @@ message CreateClassRequest {
 
 message CreateClassResponse {
   Class class = 1;
+}
+
+message GetClassesResponse {
+  repeated Class classes = 1;
 }
