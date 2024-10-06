@@ -5,6 +5,7 @@ import (
 	classservice "github.com/Ddarli/gym/classservice/models"
 	"github.com/Ddarli/gym/gateway/config"
 	"github.com/Ddarli/gym/gateway/handlers"
+	trainerservice "github.com/Ddarli/gym/trainerservice/models"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/go-chi/chi/v5"
 	"google.golang.org/grpc"
@@ -29,12 +30,18 @@ func main() {
 		log.Fatalf("Did not connect: %v", err)
 	}
 	defer classServiceConnection.Close()
+	trainerServiceConnection, err := grpc.Dial("localhost:50054", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Did not connect: %v", err)
+	}
+	defer classServiceConnection.Close()
 
 	userServiceClient := models.NewUserServiceClient(userServiceConnection)
 	bookingServiceClient := bookingmodel.NewBookingServiceClient(bookingServiceConnection)
 	classServiceClient := classservice.NewClassServiceClient(classServiceConnection)
+	trainerServiceClient := trainerservice.NewTrainerServiceClient(trainerServiceConnection)
 
-	handler := handlers.NewHandler(userServiceClient, bookingServiceClient, classServiceClient)
+	handler := handlers.NewHandler(userServiceClient, bookingServiceClient, classServiceClient, trainerServiceClient)
 
 	r := chi.NewRouter()
 	handler.RegisterRoutes(r)

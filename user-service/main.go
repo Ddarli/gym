@@ -13,17 +13,6 @@ import (
 	"os"
 )
 
-func newService() models.UserServiceServer {
-	conf := common.LoadConfig()
-	db, err := db.NewPostgresConnection(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-	repo := repository.NewPostgresUserRepository(db)
-	userService := services.NewUserService(repo)
-	return userService
-}
-
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -41,4 +30,15 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatal("Failed to serve: ", err)
 	}
+}
+
+func newService() models.UserServiceServer {
+	conf := common.LoadConfig()
+	db, err := db.NewPostgresConnection(conf)
+	if err != nil {
+		log.Fatal(err)
+	}
+	repo := repository.NewPostgresUserRepository(db)
+	userService := services.NewUserService(repo)
+	return userService
 }

@@ -6,6 +6,7 @@ import (
 	bookingmodel "github.com/Ddarli/gym/bookingservice/models"
 	classservice "github.com/Ddarli/gym/classservice/models"
 	handlers "github.com/Ddarli/gym/gateway/middleware"
+	trainerservice "github.com/Ddarli/gym/trainerservice/models"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,14 +18,16 @@ type handler struct {
 	userService    models.UserServiceClient
 	bookingService bookingmodel.BookingServiceClient
 	classService   classservice.ClassServiceClient
+	trainerService trainerservice.TrainerServiceClient
 }
 
 func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingmodel.BookingServiceClient,
-	classServiceClient classservice.ClassServiceClient) *handler {
+	classServiceClient classservice.ClassServiceClient, trainerService trainerservice.TrainerServiceClient) *handler {
 	return &handler{
 		userService:    userServiceClient,
 		bookingService: bookingService,
 		classService:   classServiceClient,
+		trainerService: trainerService,
 	}
 }
 
@@ -43,6 +46,8 @@ func (h *handler) RegisterRoutes(r *chi.Mux) {
 
 		r.Get("/api/v1/bookings/{bookingId}", h.GetBookingHandler())
 		r.Post("/api/v1/bookings", h.CreateBookingHandler())
+
+		r.Get("/api/v1/trainers/{trainerId}", h.GetTrainerHandler())
 
 		r.Get("/api/v1/classes/{classId}", h.GetClassHandler())
 		r.Get("/api/v1/classes", h.GetClassesHandler())
@@ -181,4 +186,20 @@ func (h *handler) GetClassesHandler() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
+}
+
+func (h *handler) GetTrainerHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		id := chi.URLParam(r, "trainerId")
+		trainer, err := h.trainerService.GetTrainer(ctx, &trainerservice.GetTrainerRequest{Id: id})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err := json.NewEncoder(w).Encode(trainer); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
 }
