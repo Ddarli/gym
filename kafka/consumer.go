@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/IBM/sarama"
+	"go.uber.org/zap"
 	"log"
 )
 
@@ -27,7 +28,8 @@ func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 	}
 	return nil
 }
-func StartConsuming(ctx context.Context, brokers []string, topic string, group string, consumeFunction consumeFunction) error {
+func StartConsuming(ctx context.Context, brokers []string, topic string, group string, consumeFunction consumeFunction,
+	logger *zap.SugaredLogger) error {
 	config := sarama.NewConfig()
 	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -40,7 +42,7 @@ func StartConsuming(ctx context.Context, brokers []string, topic string, group s
 	consumer := consumer{
 		fn: consumeFunction,
 	}
-
+	logger.Infof("Starting consumer group %s\n", group)
 	go func() {
 		for {
 			if err := consumerGroup.Consume(ctx, []string{topic}, &consumer); err != nil {

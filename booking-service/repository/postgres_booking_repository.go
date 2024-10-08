@@ -22,16 +22,17 @@ func NewPostgresBookingRepository(db *sqlx.DB) BookingRepository {
 	}
 }
 
-func (r *postgresBookingRepository) Create(newBooking *models.BookingModel) error {
+func (r *postgresBookingRepository) Create(newBooking *models.BookingModel) (int, error) {
+	var id int
 	tx := r.db.MustBegin()
-	tx.MustExec("INSERT INTO bookings (user_id, scheduled_class_id, booking_time, status) VALUES ($1, $2, $3, $4)",
-		newBooking.UserId, newBooking.ScheduledClassId, newBooking.BookingTime, newBooking.Status)
+	tx.QueryRow("INSERT INTO bookings (user_id, scheduled_class_id, booking_time, status) VALUES ($1, $2, $3, $4) RETURNING id",
+		newBooking.UserId, newBooking.ScheduledClassId, newBooking.BookingTime, newBooking.Status).Scan(&id)
 	if err := tx.Commit(); err != nil {
 		r.logger.Errorf("Failed to commit transaction to booking service: %v", err)
-		return err
+		return 0, err
 	}
-	r.logger.Infof("Created booking with id: %d", newBooking.Id)
-	return nil
+	r.logger.Infof("Created booking with id: %d", id)
+	return id, nil
 }
 func (r *postgresBookingRepository) Get(id int) (*models.BookingModel, error) {
 	var booking models.BookingModel
@@ -59,5 +60,12 @@ func (r *postgresBookingRepository) Delete(id int) error {
 }
 
 func (r *postgresBookingRepository) Update(id int, updatedBooking *models.BookingModel) error {
+	tx := r.db.MustBegin()
+	tx.MustExec("UPDATE bookings SET status = $1 WHERE id = $2", updatedBooking.Status, id)
+	err := tx.Commit()
+	if err != nil {
+		r.logger.Errorf("Failed to commit transaction to booking service: %v", err)
+		return err
+	}
 	return nil
 }

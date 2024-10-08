@@ -2,19 +2,42 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/Ddarli/gym/bookingservice/models"
 	"github.com/Ddarli/gym/bookingservice/repository"
+	"github.com/Ddarli/gym/kafka"
+	"github.com/IBM/sarama"
+	"log"
 	"strconv"
 	"time"
 )
 
+var brokers = []string{"localhost:9095", "localhost:9096", "localhost:9097"}
+
 type Service struct {
 	models.UnimplementedBookingServiceServer
-	repo repository.BookingRepository
+	repo     repository.BookingRepository
+	producer sarama.SyncProducer
 }
 
 func NewBookingService(repo repository.BookingRepository) models.BookingServiceServer {
-	return &Service{repo: repo}
+	createdProducer, err := kafka.NewSyncProducer(brokers)
+	if err != nil {
+		log.Fatalf("Error creating producer: %v", err)
+	}
+	return &Service{repo: repo, producer: createdProducer}
+}
+
+func (s *Service) sendBookingCreatedEvent(booking *models.Booking) error {
+	messageBytes, err := json.Marshal(booking)
+	if err != nil {
+		return err
+	}
+	err = kafka.SendMessage(s.producer, "booking-event", messageBytes)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Service) CreateBooking(ctx context.Context, in *models.CreateBookingRequest) (*models.CreateBookingResponse, error) {
@@ -27,12 +50,17 @@ func (s *Service) CreateBooking(ctx context.Context, in *models.CreateBookingReq
 		Status:           1,
 	}
 
-	err := s.repo.Create(&booking)
+	id, err := s.repo.Create(&booking)
 	if err != nil {
 		return nil, err
 	}
+	booking.Id = id
 	response := models.CreateBookingResponse{
 		Booking: models.ToProto(&booking),
+	}
+	err = s.sendBookingCreatedEvent(models.ToProto(&booking))
+	if err != nil {
+		return nil, err
 	}
 	return &response, nil
 }
