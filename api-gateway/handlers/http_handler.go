@@ -6,6 +6,7 @@ import (
 	bookingmodel "github.com/Ddarli/gym/bookingservice/models"
 	classservice "github.com/Ddarli/gym/classservice/models"
 	handlers "github.com/Ddarli/gym/gateway/middleware"
+	scheduleservice "github.com/Ddarli/gym/shceduleservice/models"
 	trainerservice "github.com/Ddarli/gym/trainerservice/models"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/go-chi/chi/v5"
@@ -15,19 +16,22 @@ import (
 )
 
 type handler struct {
-	userService    models.UserServiceClient
-	bookingService bookingmodel.BookingServiceClient
-	classService   classservice.ClassServiceClient
-	trainerService trainerservice.TrainerServiceClient
+	userService     models.UserServiceClient
+	bookingService  bookingmodel.BookingServiceClient
+	classService    classservice.ClassServiceClient
+	trainerService  trainerservice.TrainerServiceClient
+	scheduleService scheduleservice.ScheduleServiceClient
 }
 
 func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingmodel.BookingServiceClient,
-	classServiceClient classservice.ClassServiceClient, trainerService trainerservice.TrainerServiceClient) *handler {
+	classServiceClient classservice.ClassServiceClient, trainerService trainerservice.TrainerServiceClient,
+	scheduleService scheduleservice.ScheduleServiceClient) *handler {
 	return &handler{
-		userService:    userServiceClient,
-		bookingService: bookingService,
-		classService:   classServiceClient,
-		trainerService: trainerService,
+		userService:     userServiceClient,
+		bookingService:  bookingService,
+		classService:    classServiceClient,
+		trainerService:  trainerService,
+		scheduleService: scheduleService,
 	}
 }
 
@@ -46,6 +50,9 @@ func (h *handler) RegisterRoutes(r *chi.Mux) {
 
 		r.Get("/api/v1/bookings/{bookingId}", h.GetBookingHandler())
 		r.Post("/api/v1/bookings", h.CreateBookingHandler())
+
+		r.Get("/api/v1/schedules/{scheduleId}", h.GetScheduleHandler())
+		r.Post("/api/v1/schedules", h.CreateScheduleHandler())
 
 		r.Get("/api/v1/trainers/{trainerId}", h.GetTrainerHandler())
 
@@ -202,4 +209,43 @@ func (h *handler) GetTrainerHandler() http.HandlerFunc {
 		}
 	}
 
+}
+
+func (h *handler) GetScheduleHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		id := chi.URLParam(r, "scheduleId")
+		schedule, err := h.scheduleService.GetSchedule(ctx, &scheduleservice.GetScheduleRequest{Id: id})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err := json.NewEncoder(w).Encode(schedule); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func (h *handler) CreateScheduleHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		schedule := &scheduleservice.Schedule{}
+		if err := json.NewDecoder(r.Body).Decode(schedule); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		resp, err := h.scheduleService.CreateSchedule(ctx, &scheduleservice.CreateScheduleRequest{
+			ClassId:   schedule.ClassId,
+			TrainerId: schedule.TrainerId,
+			StartTime: schedule.StartTime,
+			EndTime:   schedule.EndTime,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+	}
 }

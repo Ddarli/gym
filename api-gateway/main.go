@@ -5,6 +5,7 @@ import (
 	classservice "github.com/Ddarli/gym/classservice/models"
 	"github.com/Ddarli/gym/gateway/config"
 	"github.com/Ddarli/gym/gateway/handlers"
+	scheduleservice "github.com/Ddarli/gym/shceduleservice/models"
 	trainerservice "github.com/Ddarli/gym/trainerservice/models"
 	"github.com/Ddarli/gym/userservice/models"
 	"github.com/go-chi/chi/v5"
@@ -34,14 +35,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("Did not connect: %v", err)
 	}
-	defer classServiceConnection.Close()
+	defer trainerServiceConnection.Close()
+	scheduleServiceConnection, err := grpc.Dial("localhost:50055", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Did not connect: %v", err)
+	}
+	defer scheduleServiceConnection.Close()
 
 	userServiceClient := models.NewUserServiceClient(userServiceConnection)
 	bookingServiceClient := bookingmodel.NewBookingServiceClient(bookingServiceConnection)
 	classServiceClient := classservice.NewClassServiceClient(classServiceConnection)
 	trainerServiceClient := trainerservice.NewTrainerServiceClient(trainerServiceConnection)
+	scheduleServiceClient := scheduleservice.NewScheduleServiceClient(scheduleServiceConnection)
 
-	handler := handlers.NewHandler(userServiceClient, bookingServiceClient, classServiceClient, trainerServiceClient)
+	handler := handlers.NewHandler(userServiceClient, bookingServiceClient, classServiceClient, trainerServiceClient,
+		scheduleServiceClient)
 
 	r := chi.NewRouter()
 	handler.RegisterRoutes(r)

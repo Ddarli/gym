@@ -3,6 +3,7 @@
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/booking-service/migrations/script.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/class-service/migrations/script.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/schedule-service/migrations/script.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/trainer-service/migrations/script.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/user-service/migrations/script.sql" dialect="PostgreSQL" />
   </component>
