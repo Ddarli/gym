@@ -67,3 +67,14 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./kafka_data/502:/kafka
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "8002:16686"
+      - "4317:4317"
+      - "4318:4318"
+    restart: unless-stopped

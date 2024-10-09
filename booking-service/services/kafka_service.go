@@ -6,7 +6,9 @@ import (
 	bookingModels "github.com/Ddarli/gym/bookingservice/models"
 	"github.com/Ddarli/gym/bookingservice/repository"
 	"github.com/Ddarli/gym/common/logger"
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -31,6 +33,11 @@ func (ks *KafkaService) updateBooking(bookingId int) bool {
 }
 
 func (ks *KafkaService) ProcessAvailabilityCheck(ctx context.Context, message *sarama.ConsumerMessage) error {
+	carrier := otelsarama.NewConsumerMessageCarrier(message)
+	ctx = otel.GetTextMapPropagator().Extract(ctx, carrier)
+	tracer := otel.Tracer("kafka-consumer")
+	ctx, span := tracer.Start(ctx, "consume-kafka-message")
+	defer span.End()
 	var msg bookingModels.Booking
 	err := json.Unmarshal(message.Value, &msg)
 	if err != nil {

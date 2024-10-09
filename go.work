@@ -3,10 +3,10 @@ go 1.23.1
 use (
 	./api-gateway
 	./booking-service
+	./class-service
 	./common
 	./kafka
 	./schedule-service
 	./trainer-service
 	./user-service
-	./class-service
 )

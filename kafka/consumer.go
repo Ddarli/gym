@@ -3,20 +3,21 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
 	"go.uber.org/zap"
 	"log"
 )
 
 type consumeFunction func(ctx context.Context, message *sarama.ConsumerMessage) error
 
-type consumer struct {
+type consumerGroupHandler struct {
 	fn consumeFunction
 }
 
-func (c *consumer) Setup(session sarama.ConsumerGroupSession) error   { return nil }
-func (c *consumer) Cleanup(session sarama.ConsumerGroupSession) error { return nil }
-func (c *consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+func (c *consumerGroupHandler) Setup(session sarama.ConsumerGroupSession) error   { return nil }
+func (c *consumerGroupHandler) Cleanup(session sarama.ConsumerGroupSession) error { return nil }
+func (c *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for message := range claim.Messages() {
 		ctx := context.TODO()
 		err := c.fn(ctx, message)
@@ -38,15 +39,12 @@ func StartConsuming(ctx context.Context, brokers []string, topic string, group s
 	if err != nil {
 		return err
 	}
-
-	consumer := consumer{
-		fn: consumeFunction,
-	}
-	logger.Infof("Starting consumer group %s\n", group)
+	h := otelsarama.WrapConsumerGroupHandler(&consumerGroupHandler{fn: consumeFunction})
+	logger.Infof("Starting consumerGroupHandler group %s\n", group)
 	go func() {
 		for {
-			if err := consumerGroup.Consume(ctx, []string{topic}, &consumer); err != nil {
-				fmt.Printf("Error from consumer: %v", err)
+			if err := consumerGroup.Consume(ctx, []string{topic}, h); err != nil {
+				fmt.Printf("Error from consumerGroupHandler: %v", err)
 			}
 			if ctx.Err() != nil {
 				return

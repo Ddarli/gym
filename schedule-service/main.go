@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/Ddarli/gym/common"
 	"github.com/Ddarli/gym/common/logger"
+	"github.com/Ddarli/gym/common/tracer"
 	"github.com/Ddarli/gym/kafka"
 	"github.com/Ddarli/gym/shceduleservice/db"
 	"github.com/Ddarli/gym/shceduleservice/models"
@@ -48,6 +49,8 @@ func startServer(service models.ScheduleServiceServer) {
 }
 
 func main() {
+	cleanup := tracer.InitTracer("schedule-service")
+	defer cleanup()
 	service, kafkaService := newService()
 	go startServer(service)
 	ctx := context.Background()

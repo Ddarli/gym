@@ -8,8 +8,10 @@ import (
 	"github.com/Ddarli/gym/classservice/services"
 	"github.com/Ddarli/gym/common"
 	"github.com/Ddarli/gym/common/logger"
+	"github.com/Ddarli/gym/common/tracer"
 	"github.com/Ddarli/gym/kafka"
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -39,7 +41,7 @@ func startServer(service models.ClassServiceServer) {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewClientHandler()))
 	models.RegisterClassServiceServer(grpcServer, service)
 	log.Infof("Serving gRPC on %s", address)
 	if err := grpcServer.Serve(lis); err != nil {
@@ -48,6 +50,8 @@ func startServer(service models.ClassServiceServer) {
 }
 
 func main() {
+	cleanup := tracer.InitTracer("class-service")
+	defer cleanup()
 	service, kafkaService := newService()
 	go startServer(service)
 	ctx := context.Background()

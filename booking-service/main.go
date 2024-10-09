@@ -8,6 +8,7 @@ import (
 	"github.com/Ddarli/gym/bookingservice/services"
 	"github.com/Ddarli/gym/common"
 	"github.com/Ddarli/gym/common/logger"
+	"github.com/Ddarli/gym/common/tracer"
 	"github.com/Ddarli/gym/kafka"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -18,6 +19,8 @@ import (
 var log = logger.GetLogger()
 
 func main() {
+	cleanup := tracer.InitTracer("booking-service")
+	defer cleanup()
 	service, kafkaService := newService()
 	go startServer(service)
 	ctx := context.Background()

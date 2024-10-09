@@ -35,6 +35,7 @@ func (r *postgresBookingRepository) Create(newBooking *models.BookingModel) (int
 	return id, nil
 }
 func (r *postgresBookingRepository) Get(id int) (*models.BookingModel, error) {
+
 	var booking models.BookingModel
 	err := r.db.Get(&booking, "SELECT * FROM bookings WHERE id = $1", id)
 	if err != nil {

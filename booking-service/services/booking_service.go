@@ -6,7 +6,7 @@ import (
 	"github.com/Ddarli/gym/bookingservice/models"
 	"github.com/Ddarli/gym/bookingservice/repository"
 	"github.com/Ddarli/gym/kafka"
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 	"log"
 	"strconv"
 	"time"
@@ -33,7 +33,7 @@ func (s *Service) sendBookingCreatedEvent(booking *models.Booking) error {
 	if err != nil {
 		return err
 	}
-	err = kafka.SendMessage(s.producer, "booking-event", messageBytes)
+	err = kafka.SendMessage(context.Background(), s.producer, "booking-event", messageBytes)
 	if err != nil {
 		return err
 	}

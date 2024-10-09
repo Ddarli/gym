@@ -7,7 +7,7 @@ import (
 	"github.com/Ddarli/gym/classservice/repository"
 	"github.com/Ddarli/gym/common/logger"
 	"github.com/Ddarli/gym/kafka"
-	"github.com/IBM/sarama"
+	"github.com/Shopify/sarama"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -47,7 +47,7 @@ func (ks *KafkaService) ProcessAvailabilityCheck(ctx context.Context, message *s
 		msg.Status = "2"
 		producer, _ := kafka.NewSyncProducer(brokers)
 		event, _ := json.Marshal(msg)
-		err = kafka.SendMessage(producer, "class-checked-events", event)
+		err = kafka.SendMessage(ctx, producer, "class-checked-events", event)
 		if err != nil {
 			ks.logger.Warnf("Failed to send message to Kafka topic: %v", err)
 			return err

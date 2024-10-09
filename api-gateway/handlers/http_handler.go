@@ -66,14 +66,17 @@ func (h *handler) LoginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
+
 		authRequest := models.AuthenticateRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&authRequest); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		response, err := h.userService.Authenticate(ctx, &authRequest)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		if response.Error == "" && response.Token != "" {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -86,10 +89,12 @@ func (h *handler) RegisterHandler() http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		user := models.User{}
+
 		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		request := models.CreateUserRequest{
 			Username:    user.Username,
 			Password:    user.Password,
@@ -100,6 +105,7 @@ func (h *handler) RegisterHandler() http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		if err := json.NewEncoder(w).Encode(savedUser); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
