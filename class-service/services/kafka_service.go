@@ -8,6 +8,8 @@ import (
 	"github.com/Ddarli/gym/common/logger"
 	"github.com/Ddarli/gym/kafka"
 	"github.com/Shopify/sarama"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -47,7 +49,15 @@ func (ks *KafkaService) ProcessAvailabilityCheck(ctx context.Context, message *s
 		msg.Status = "2"
 		producer, _ := kafka.NewSyncProducer(brokers)
 		event, _ := json.Marshal(msg)
-		err = kafka.SendMessage(ctx, producer, "class-checked-events", event)
+
+		kafkaMessage := &sarama.ProducerMessage{
+			Topic: "class-checked-events",
+			Value: sarama.ByteEncoder(event),
+		}
+
+		otel.GetTextMapPropagator().Inject(ctx, otelsarama.NewProducerMessageCarrier(kafkaMessage))
+
+		_, _, err = producer.SendMessage(kafkaMessage)
 		if err != nil {
 			ks.logger.Warnf("Failed to send message to Kafka topic: %v", err)
 			return err

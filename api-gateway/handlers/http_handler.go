@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	bookingmodel "github.com/Ddarli/gym/bookingservice/models"
+	bookingservice "github.com/Ddarli/gym/bookingservice/models"
 	classservice "github.com/Ddarli/gym/classservice/models"
 	handlers "github.com/Ddarli/gym/gateway/middleware"
 	scheduleservice "github.com/Ddarli/gym/shceduleservice/models"
@@ -17,13 +17,13 @@ import (
 
 type handler struct {
 	userService     models.UserServiceClient
-	bookingService  bookingmodel.BookingServiceClient
+	bookingService  bookingservice.BookingServiceClient
 	classService    classservice.ClassServiceClient
 	trainerService  trainerservice.TrainerServiceClient
 	scheduleService scheduleservice.ScheduleServiceClient
 }
 
-func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingmodel.BookingServiceClient,
+func NewHandler(userServiceClient models.UserServiceClient, bookingService bookingservice.BookingServiceClient,
 	classServiceClient classservice.ClassServiceClient, trainerService trainerservice.TrainerServiceClient,
 	scheduleService scheduleservice.ScheduleServiceClient) *handler {
 	return &handler{
@@ -116,13 +116,14 @@ func (h *handler) GetBookingHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
+
 		id := chi.URLParam(r, "bookingId")
-		request := bookingmodel.GetBookingRequest{Id: id}
+		request := bookingservice.GetBookingRequest{Id: id}
 		booking, err := h.bookingService.GetBooking(ctx, &request)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		//w.Header().Set("Content-Type", "application/json")
+
 		if err := json.NewEncoder(w).Encode(booking); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -133,7 +134,7 @@ func (h *handler) CreateBookingHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		req := bookingmodel.CreateBookingRequest{}
+		req := bookingservice.CreateBookingRequest{}
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

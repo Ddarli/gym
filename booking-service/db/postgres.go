@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"github.com/Ddarli/gym/common"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )

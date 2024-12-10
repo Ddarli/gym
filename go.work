@@ -4,7 +4,6 @@ use (
 	./api-gateway
 	./booking-service
 	./class-service
-	./common
 	./kafka
 	./schedule-service
 	./trainer-service

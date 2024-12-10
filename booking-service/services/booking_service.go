@@ -7,6 +7,7 @@ import (
 	"github.com/Ddarli/gym/bookingservice/repository"
 	"github.com/Ddarli/gym/kafka"
 	"github.com/Shopify/sarama"
+	"go.opentelemetry.io/otel"
 	"log"
 	"strconv"
 	"time"
@@ -65,8 +66,11 @@ func (s *Service) CreateBooking(ctx context.Context, in *models.CreateBookingReq
 	return &response, nil
 }
 func (s *Service) GetBooking(ctx context.Context, in *models.GetBookingRequest) (*models.GetBookingResponse, error) {
+	tracer := otel.Tracer("booking-service")
+	_, span := tracer.Start(ctx, "GetBooking")
+	defer span.End()
 	id, _ := strconv.Atoi(in.GetId())
-	booking, err := s.repo.Get(id)
+	booking, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}

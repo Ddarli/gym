@@ -1,12 +1,13 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/Ddarli/gym/bookingservice/models"
-	mylogger "github.com/Ddarli/gym/common/logger"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 )
 
@@ -34,7 +35,9 @@ func (r *postgresBookingRepository) Create(newBooking *models.BookingModel) (int
 	r.logger.Infof("Created booking with id: %d", id)
 	return id, nil
 }
-func (r *postgresBookingRepository) Get(id int) (*models.BookingModel, error) {
+func (r *postgresBookingRepository) Get(ctx context.Context, id int) (*models.BookingModel, error) {
+	tracer := otel.Tracer("kafka-consumer")
+	ctx, span := tracer.Start(ctx, "get-booking")
 
 	var booking models.BookingModel
 	err := r.db.Get(&booking, "SELECT * FROM bookings WHERE id = $1", id)
@@ -47,6 +50,9 @@ func (r *postgresBookingRepository) Get(id int) (*models.BookingModel, error) {
 		return nil, err
 	}
 	r.logger.Infof("Successfully retrieved booking with ID: %d", booking.Id)
+
+	span.End()
+
 	return &booking, nil
 }
 func (r *postgresBookingRepository) Delete(id int) error {
@@ -60,7 +66,10 @@ func (r *postgresBookingRepository) Delete(id int) error {
 	return nil
 }
 
-func (r *postgresBookingRepository) Update(id int, updatedBooking *models.BookingModel) error {
+func (r *postgresBookingRepository) Update(ctx context.Context, id int, updatedBooking *models.BookingModel) error {
+	tracer := otel.Tracer("kafka-consumer")
+	ctx, span := tracer.Start(ctx, "update-booking")
+
 	tx := r.db.MustBegin()
 	tx.MustExec("UPDATE bookings SET status = $1 WHERE id = $2", updatedBooking.Status, id)
 	err := tx.Commit()
@@ -68,5 +77,7 @@ func (r *postgresBookingRepository) Update(id int, updatedBooking *models.Bookin
 		r.logger.Errorf("Failed to commit transaction to booking service: %v", err)
 		return err
 	}
+
+	span.End()
 	return nil
 }

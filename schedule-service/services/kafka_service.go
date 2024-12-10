@@ -8,6 +8,8 @@ import (
 	"github.com/Ddarli/gym/kafka"
 	"github.com/Ddarli/gym/shceduleservice/repository"
 	"github.com/Shopify/sarama"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 	"strconv"
 )
@@ -33,18 +35,30 @@ func (ks *KafkaService) checkScheduleAvailability(classId int) bool {
 
 func (ks *KafkaService) ProcessAvailabilityCheck(ctx context.Context, message *sarama.ConsumerMessage) error {
 	var msg bookingModels.Booking
+
 	err := json.Unmarshal(message.Value, &msg)
 	if err != nil {
 		return err
 	}
+
 	id, _ := strconv.Atoi(msg.ScheduledClassId)
+
 	hasSpace := ks.checkScheduleAvailability(id)
+
 	if hasSpace {
 		ks.logger.Infof("Schedule is correct")
 		msg.Status = "3"
 		producer, _ := kafka.NewSyncProducer(brokers)
 		event, _ := json.Marshal(msg)
-		err = kafka.SendMessage(ctx, producer, "schedule-checked-events", event)
+
+		kafkaMessage := &sarama.ProducerMessage{
+			Topic: "schedule-checked-events",
+			Value: sarama.ByteEncoder(event),
+		}
+
+		otel.GetTextMapPropagator().Inject(ctx, otelsarama.NewProducerMessageCarrier(kafkaMessage))
+
+		_, _, err = producer.SendMessage(kafkaMessage)
 		if err != nil {
 			ks.logger.Warnf("Failed to send message to Kafka topic: %v", err)
 			return err
